@@ -37,3 +37,17 @@ emitter.emit('hello world','from emitter');
 //output : calling 2
 ```
 
+You can cut off emitting from hook callback function. 
+
+```js
+emitter.hook(function () {
+ console.log('calling 1');
+ return false;
+});
+
+emitter.hook(function () {
+ console.log('calling 2');
+});
+
+//output : calling 1
+

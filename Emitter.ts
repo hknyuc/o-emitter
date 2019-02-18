@@ -4,12 +4,13 @@ export class Emitter {
     _events;
     _async;
     _sync;
+    _pipe;
     _strategy;
     /**
      * 
      * @param {string} type is sync or async. if it is 'async' as asynchronously otherwise synchronously
      */
-    constructor(type: 'async' | 'sync') {
+    constructor(type: 'async' | 'sync' | 'pipe') {
         this.type = type;
         this._events = [];
         this._async = (events, args) => {
@@ -31,6 +32,14 @@ export class Emitter {
                 return true;
             });
             return result;
+        }
+
+        this._pipe = function (events,args){
+           let result = args;
+           events.forEach(function (event){
+                 result = event.apply(window,args);
+           });
+           return result;
         }
 
         this._strategy = type === 'sync' ? this._sync : this._async;

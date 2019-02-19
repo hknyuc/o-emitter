@@ -6,9 +6,10 @@ export class Emitter {
     _sync;
     _pipe;
     _strategy;
+    _getStrategy;
     /**
      * 
-     * @param {string} type is sync or async. if it is 'async' as asynchronously otherwise synchronously
+     * @param {string} type is determine strategy of emitter.
      */
     constructor(type: 'async' | 'sync' | 'pipe') {
         this.type = type;
@@ -42,7 +43,13 @@ export class Emitter {
            return result;
         }
 
-        this._strategy = type === 'sync' ? this._sync : this._async;
+        this._getStrategy = function (type){
+            if(type === 'sync') return this._sync;
+            if(type === 'async') return this._async;
+            return this._pipe;
+        }
+        
+        this._strategy = this._getStrategy(type);
     }
     /**
      * hooks to actions

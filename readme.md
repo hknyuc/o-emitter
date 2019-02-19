@@ -50,4 +50,24 @@ emitter.hook(function () {
 });
 
 //output : calling 1
+```
+
+set type as 'pipe' if you want to get changed emitted value.
+
+```js
+let emitter = new Emitter('pipe');
+emitter.hook(function () {
+ return value * 2;
+});
+
+emitter.hook(function (value) {
+  return value * 3;
+});
+
+let result = emitter.emit(1);
+
+console.log(result);
+
+//output 6
+```
 

@@ -1,16 +1,18 @@
 {
   "name": "o-emitter",
-  "version": "1.0.1",
+  "version": "1.0.6",
   "description": "Implementation of Observer pattern for js projects.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha tests"
   },
   "keywords": [
     "emitter",
     "observer"
   ],
   "author": "Hakan Yücel",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "mocha": "^6.0.0"
+  }
 }
-

@@ -7,6 +7,10 @@ export class Emitter {
     _pipe;
     _strategy;
     _getStrategy;
+    _isPromise;
+    _anyAsync;
+    _pipeAsync;
+    _pipeSync;
     /**
      * 
      * @param {string} type is determine strategy of emitter.
@@ -14,41 +18,67 @@ export class Emitter {
     constructor(type: 'async' | 'sync' | 'pipe') {
         this.type = type;
         this._events = [];
-        this._async = (events, args) => {
+        this._async = async (events, args) => {
+            let allPromise = [];
             events.forEach(function (event) {
                 setTimeout(function () {
-                    event.apply(window, args);
+                    allPromise.push(event.apply({}, args));
                 }, 0);
             });
-            return true;
+            return Promise.all(allPromise);
         }
 
         this._sync = (events, args) => {
-            let result = true;
-            events.forEach(function (event) {
-                if (event.apply(window, args) === false) {
-                    result = false;
-                    return false;
-                }
-                return true;
-            });
+            for(let i=0;i<events.length;i++){
+                let event = events[i];
+                if(event.apply({},args) === false) return false;
+            }
+            return true;
+        }
+
+        this._isPromise = function (promisable){
+            return promisable instanceof Promise;
+        }
+
+        this._anyAsync = function (funcs:Array<Function>){
+            return funcs.some(a=>a.name === "asyncFunc");
+        }
+
+        this._pipe = function (events, args) {
+            if(this._anyAsync(events)) return this._pipeAsync(events,args);
+            return this._pipeSync(events,args);
+        }
+
+        this._pipeSync = function (events,args){
+            let result = args;
+            let firstLoop = false;
+            for (let i = 0; i < events.length; i++) {
+                firstLoop = i === 0;
+                let event = events[i];
+                result = event.apply({}, firstLoop?args:[result]);
+            }
             return result;
         }
 
-        this._pipe = function (events,args){
-           let result = args;
-           events.forEach(function (event){
-                 result = event.apply(window,args);
-           });
-           return result;
+        this._pipeAsync = async function (events,args){
+            let result = args;
+            let firstLoop = false;
+            for (let i = 0; i < events.length; i++) {
+                firstLoop = i === 0;
+                let event = events[i];
+                let newResult = event.apply({}, firstLoop?args:[result]);
+                newResult = this._isPromise(newResult)? newResult : Promise.resolve(newResult);
+                result = await newResult;
+            }
+            return result;
         }
 
-        this._getStrategy = function (type){
-            if(type === 'sync') return this._sync;
-            if(type === 'async') return this._async;
+        this._getStrategy = function (type) {
+            if (type === 'sync') return this._sync;
+            if (type === 'async') return this._async;
             return this._pipe;
         }
-        
+
         this._strategy = this._getStrategy(type);
     }
     /**
@@ -70,9 +100,9 @@ export class Emitter {
 
     /**
      * emits to all observers . if strategy is sync, result can break value. if returns false it must be break
-     * @returns {Boolean}  break value. if true continue otherwise break.
+     * @returns {Boolean | Promise<any>}  break value. if true continue otherwise break.
      */
-    emit(...params: Array<any>): boolean {
+    emit(...params: Array<any>): boolean | Promise<any> {
         return this._strategy(this._events, arguments);
     }
 }

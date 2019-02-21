@@ -65,9 +65,23 @@ emitter.hook(function (value) {
 });
 
 let result = emitter.emit(1);
-
 console.log(result);
-
 //output 6
 ```
 
+you can catch async result from hooks in mode pipe.
+
+```js
+let emitter = new Emitter('pipe');
+emitter.hook(function () {
+ return value * 2;
+});
+
+emitter.hook(async function (value) {
+  return value * 3;
+});
+
+emitter.emit(1).then((result)=>{
+    console.log(result);
+});
+//output 6
